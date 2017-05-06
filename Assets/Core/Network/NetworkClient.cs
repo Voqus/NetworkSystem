@@ -5,13 +5,12 @@ using System.Net.Sockets;
 using UnityEngine.UI;
 using UnityEngine;
 
-using Core.Entities;
 using Core.Network.Packets;
 using Core.Util;
 
 namespace Core.Network
 {
-    public class NetworkClient
+    public class NetworkClient : MonoBehaviour
     {
         #region Network Fields & Properties
         public TcpClient Socket;
@@ -30,6 +29,7 @@ namespace Core.Network
 
         private Text outputField;
         private Thread thread;
+        public bool isConnected = false;
 
         public NetworkClient()
         { }
@@ -52,6 +52,36 @@ namespace Core.Network
             {
                 Debug.Log("You have no internet connection!");
                 Debug.LogError("SocketException: " + e.Data);
+                return;
+            }
+
+            reader = new BinaryReader(Socket.GetStream());
+            writer = new BinaryWriter(Socket.GetStream());
+            #endregion
+
+            initListenerThread();
+        }
+
+        public void init(string ipAddr, int port)
+        {
+            IpAddr = ipAddr;
+            Port = port;
+
+            #region Initialize UI components
+            outputField = GameObject.Find("ChatPanel").transform.GetChild(0).GetComponent<Text>();
+            #endregion
+
+            #region Initialize networking components & packets
+            try
+            {
+                Socket = new TcpClient(IpAddr, Port);
+                isConnected = true;
+            }
+            catch (SocketException e)
+            {
+                Debug.Log("You have no internet connection!");
+                Debug.LogError("SocketException: " + e.Data);
+                Application.Quit();
                 return;
             }
 
@@ -86,6 +116,19 @@ namespace Core.Network
                                 });
                                 break;
                             }
+                        case PacketType.LOGIN:
+                            {
+                                float x = reader.ReadSingle();
+                                float y = reader.ReadSingle();
+                                float z = reader.ReadSingle();
+
+                                UnityThread.executeInUpdate(() =>
+                                {
+                                    Instantiate(Resources.Load("GameObjects/Player"), new Vector3(x, y, z), Quaternion.identity);
+                                });
+
+                                break;
+                            }
                         default:
                             break;
                     }
@@ -100,6 +143,9 @@ namespace Core.Network
         /// <param name="packet"></param>
         public void sendPacket(Packet packet)
         {
+            if (!isConnected)
+                return;
+
             PacketType packType = packet.PackType;
             switch (packType)
             {

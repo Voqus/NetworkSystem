@@ -25,6 +25,10 @@ namespace Core.Network.Packets
                 Client.writer.Write(Player.PlayerName);
                 Client.writer.Write(Client.IpAddress.ToString());
                 Client.writer.Write(Player.State);
+
+                Client.writer.Write(Player.position.x);
+                Client.writer.Write(Player.position.y);
+                Client.writer.Write(Player.position.z);
                 Client.writer.Flush();
             }
             catch (SocketException e)

@@ -1,4 +1,4 @@
-﻿using System.Net;
+﻿using UnityEngine;
 
 using Core.Network.Packets;
 using Core.Network;
@@ -13,6 +13,9 @@ namespace Core.Entities
         public ulong PlayerId { get; private set; }
         public string PlayerName;
         public string State;
+        private GameObject character;
+
+        public Vector3 position;
         #endregion
 
         #region Network Fields & Properties
@@ -29,17 +32,22 @@ namespace Core.Entities
 
         private void Start()
         {
-            Client = new NetworkClient("127.0.0.1", 5885);
+            // After implementing saving-to-storage, the position of the character needs to be loaded.
+            character = GameObject.Find("Player");
+            position = character.transform.position;
+            
+            Client = GameObject.Find("Client").AddComponent<NetworkClient>();
+            Client.GetComponent<NetworkClient>().init("127.0.0.1", 5885) ;
             Client.sendPacket(new LoginPacket(Client, this));
         }
 
         private void Update()
-        {
-        }
+        {}
 
         private void OnApplicationQuit()
         {
-            Client.sendPacket(new DisconnectPacket(Client, this));
+            if(Client != null && Client.isConnected)
+                Client.sendPacket(new DisconnectPacket(Client, this));
         }
     }
 }

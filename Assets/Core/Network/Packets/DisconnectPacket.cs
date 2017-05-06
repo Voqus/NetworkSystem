@@ -24,19 +24,9 @@ namespace Core.Network.Packets
                 Client.writer.Write(Player.PlayerId);
                 Client.writer.Flush();
             }
-            catch(SocketException e)
+            catch(System.Exception e)
             {
-                Debug.LogError("SocketException: " + e.Data);
-            }
-            finally
-            {
-                if(Client.Socket != null)
-                {
-                    // Terminate the stream of the client and its socket.
-                    Client.writer.Close();
-                    Client.reader.Close();
-                    Client.Socket.Close();
-                }
+                Debug.LogError("Exception: " + e.Data);
             }
         }
     }
